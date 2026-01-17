@@ -48,7 +48,18 @@ async function doBump() {
     }
     
     console.log('Sending /bump...');
-    await channel.sendSlash('302050872383242240', 'bump');
+    
+    const guild = channel.guild;
+    await guild.commands.fetch();
+    const bumpCommand = guild.commands.cache.find(cmd => cmd.name === 'bump' && cmd.applicationId === '302050872383242240');
+    
+    if (!bumpCommand) {
+      console.log('Bump command not found, trying alternative method...');
+      await channel.sendSlash('302050872383242240', 'bump');
+    } else {
+      await bumpCommand.run(channel);
+    }
+    
     console.log('Bump sent!');
     
   } catch (error) {
