@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 const TOKEN = process.env.DISCORD_TOKEN;
-const CHANNEL_ID = '1447582915696529450';
+const CHANNEL_ID = '1447581540509815034';
 
 const client = new Client({
   checkUpdate: false,
