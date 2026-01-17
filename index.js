@@ -1,4 +1,3 @@
-javascript
 const { Client } = require('discord.js-selfbot-v13');
 const express = require('express');
 
