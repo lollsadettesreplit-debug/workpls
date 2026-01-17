@@ -1,4 +1,4 @@
-console.log('=== AUTO BUMP BOT ===');
+console.log('🚀 BUMP BOT - SECONDARY SERVER TEST');
 
 const express = require('express');
 const https = require('https');
@@ -6,26 +6,39 @@ const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// CONFIG
+// ==================== CONFIG ====================
 const TOKEN = process.env.DISCORD_TOKEN;
-const SERVER_ID = '1447204367089270874';
-const CHANNEL_ID = '1447213878030237696';
+const SERVER_ID = '1447580859585790057';     // Secondary server
+const CHANNEL_ID = '1447582915696529450';    // Channel in secondary server
 
-// VERIFICA
+// Timing per test: 5 minuti invece di 2 ore (per test veloce)
+const TEST_INTERVAL = 5 * 60 * 1000; // 5 minuti
+const MIN_EXTRA = 1 * 60 * 1000;     // 1 minuto extra
+const MAX_EXTRA = 3 * 60 * 1000;     // 3 minuti extra
+
 if (!TOKEN) {
-  console.error('❌ ERRORE: DISCORD_TOKEN non trovato!');
-  console.error('   Vai su Render → Settings → Environment');
-  console.error('   Aggiungi: DISCORD_TOKEN = tuo_token_qui');
+  console.error('❌ ERRORE: TOKEN MANCANTE');
+  console.error('👉 Vai su Render → Settings → Environment');
+  console.error('👉 Aggiungi: DISCORD_TOKEN = tuo_token');
   process.exit(1);
 }
 
-console.log('✅ Configurazione OK');
-console.log('✅ Server ID:', SERVER_ID);
-console.log('✅ Channel ID:', CHANNEL_ID);
+console.log('✅ Config OK');
+console.log('✅ Secondary Server:', SERVER_ID);
+console.log('✅ Channel:', CHANNEL_ID);
+console.log('⏱️  Test mode: 5-8 minutes between bumps');
 
-// FUNZIONE BUMP
+// ==================== FUNZIONI ====================
+function getRandomExtra() {
+  return Math.floor(Math.random() * (MAX_EXTRA - MIN_EXTRA + 1)) + MIN_EXTRA;
+}
+
+function getNextDelay() {
+  return TEST_INTERVAL + getRandomExtra();
+}
+
 function sendBump() {
-  console.log('🔄 Invio bump...');
+  console.log('🧪 TEST BUMP - Invio comando...');
   
   const data = JSON.stringify({
     type: 2,
@@ -36,73 +49,104 @@ function sendBump() {
       id: '947088344167366698',
       name: 'bump',
       type: 1
-    }
+    },
+    nonce: Date.now().toString()
   });
 
   const options = {
     hostname: 'discord.com',
-    port: 443,
     path: '/api/v9/interactions',
     method: 'POST',
     headers: {
       'Authorization': TOKEN,
       'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0'
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
   };
 
   const req = https.request(options, (res) => {
-    console.log(`📡 Risposta: ${res.statusCode}`);
-    
-    res.on('data', () => {});
+    let responseData = '';
+    res.on('data', (chunk) => responseData += chunk);
     res.on('end', () => {
+      console.log(`📡 Status Code: ${res.statusCode}`);
+      
       if (res.statusCode === 200 || res.statusCode === 204) {
-        console.log('✅ BUMP INVIATO!');
-        console.log('⏰ Prossimo tra 2 ore');
+        console.log('✅ TEST SUCCESS - Bump inviato!');
+        console.log('🎯 Funziona sul server secondario!');
+      } else if (res.statusCode === 401) {
+        console.log('🔑 TOKEN SCADUTO o non valido');
+        console.log('👉 Ottieni nuovo token con F12 → Console');
+      } else if (res.statusCode === 404) {
+        console.log('❌ Disboard non trovato in questo server');
+        console.log('👉 Invita Disboard con /invite');
+      } else if (res.statusCode === 403) {
+        console.log('🚫 Permessi insufficienti');
+        console.log('👉 Assicurati di avere accesso al canale');
       } else {
-        console.log('⚠️  Bump fallito, riprovo dopo');
+        console.log(`⚠️  Risposta: ${responseData.substring(0, 150)}`);
       }
+      
+      // Programma prossimo test
+      scheduleNextBump();
     });
   });
 
   req.on('error', (error) => {
-    console.log('❌ Errore rete:', error.message);
+    console.log('❌ Errore di rete:', error.message);
+    // Riprova tra 2 minuti
+    setTimeout(scheduleNextBump, 2 * 60 * 1000);
   });
 
   req.write(data);
   req.end();
 }
 
-// SERVER WEB
+function scheduleNextBump() {
+  const delay = getNextDelay();
+  const nextTime = new Date(Date.now() + delay);
+  
+  console.log(`⏰ Prossimo test: ${nextTime.toLocaleTimeString()}`);
+  console.log(`   (tra ${Math.round(delay / 1000)} secondi)`);
+  console.log('---');
+  
+  setTimeout(sendBump, delay);
+}
+
+// ==================== WEB SERVER ====================
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    service: 'autobump',
-    uptime: Math.floor(process.uptime()),
-    next_bump: '2 ore'
+    mode: 'secondary-server-test',
+    server_id: SERVER_ID,
+    channel_id: CHANNEL_ID,
+    interval: '5-8 minutes',
+    note: 'Testing on secondary server'
   });
 });
 
 app.get('/health', (req, res) => {
-  res.send('OK');
+  res.send('TEST SERVER OK');
 });
 
-// AVVIA
+app.get('/test-now', (req, res) => {
+  res.send('Triggering test bump...');
+  setTimeout(sendBump, 1000);
+});
+
+// ==================== START ====================
 app.listen(PORT, () => {
-  console.log(`🌐 Server avviato: porta ${PORT}`);
+  console.log(`🌐 Server test on port ${PORT}`);
   
-  // PRIMO BUMP TRA 1 MINUTO
+  // Primo test tra 15 secondi
+  const firstDelay = 15000;
+  console.log(`⏳ Primo test tra ${firstDelay / 1000} secondi`);
+  
   setTimeout(() => {
     sendBump();
-  }, 60000);
+  }, firstDelay);
   
-  // POI OGNI 2 ORE
-  setInterval(() => {
-    sendBump();
-  }, 7200000); // 2 ore
-  
-  console.log('🚀 Bot pronto!');
-  console.log('⏱️  Primo bump tra 1 minuto');
+  console.log('🎯 Bot di test attivo sul server secondario');
+  console.log('👉 Verifica che Disboard sia nel server secondario!');
 });
 
-console.log('✅ Setup completato');
+console.log('✅ Setup test completato');
