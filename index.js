@@ -45,10 +45,12 @@ function sendBump() {
     application_id: '302050872383242240', // Disboard ID
     guild_id: SERVER_ID,
     channel_id: CHANNEL_ID,
+    session_id: 'test_session_' + Date.now(),
     data: {
       id: '947088344167366698',
       name: 'bump',
-      type: 1
+      type: 1,
+      version: '947088344167366698'  // ⬅️ AGGIUNTO QUESTO!
     },
     nonce: Date.now().toString()
   });
@@ -83,7 +85,7 @@ function sendBump() {
         console.log('🚫 Permessi insufficienti');
         console.log('👉 Assicurati di avere accesso al canale');
       } else {
-        console.log(`⚠️  Risposta: ${responseData.substring(0, 150)}`);
+        console.log(`⚠️  Risposta: ${responseData.substring(0, 200)}`);
       }
       
       // Programma prossimo test
@@ -126,11 +128,6 @@ app.get('/', (req, res) => {
 
 app.get('/health', (req, res) => {
   res.send('TEST SERVER OK');
-});
-
-app.get('/test-now', (req, res) => {
-  res.send('Triggering test bump...');
-  setTimeout(sendBump, 1000);
 });
 
 // ==================== START ====================
