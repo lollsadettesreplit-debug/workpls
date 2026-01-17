@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "discord.js-selfbot-v13": "^2.3.84",
+    "discord.js-selfbot-v13": "latest",
     "express": "^4.18.2"
   }
 }
